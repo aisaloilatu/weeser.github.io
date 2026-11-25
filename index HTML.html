@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Peminjaman Ruang Kampus</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+            color: #1e293b;
+        }
+
+        header {
+            background: #123653;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 25px auto;
+            padding: 15px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #ddd;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 15px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            background: #087e8b;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .ruang {
+            background: #e4f3f5;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 5px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #notifikasi {
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #123653;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Sistem Informasi Peminjaman Ruang Kampus</h1>
+    <p>Layanan Pengajuan Peminjaman Ruangan</p>
+</header>
+
+<div class="container">
+
+    <!-- LOGIN -->
+    <section class="card" id="halamanLogin">
+        <h2>Login Pengguna</h2>
+
+        <label>Nama Pengguna</label>
+        <input type="text" id="namaLogin"
+               placeholder="Masukkan nama">
+
+        <label>Password</label>
+        <input type="password" id="password"
+               placeholder="Masukkan password">
+
+        <button onclick="login()">Masuk</button>
+        <p id="pesanLogin"></p>
+    </section>
+
+    <!-- MENU UTAMA -->
+    <div id="menuUtama" class="hidden">
+
+        <section class="card">
+            <h2>Selamat Datang!</h2>
+            <p>Pengguna: <b id="namaUser"></b></p>
+            <button onclick="logout()">Keluar</button>
+        </section>
+
+        <!-- DAFTAR RUANG -->
+        <section class="card">
+            <h2>Daftar Ruangan</h2>
+
+            <div class="ruang">
+                Ruang 101 - Kapasitas 30 orang
+            </div>
+
+            <div class="ruang">
+                Ruang 102 - Kapasitas 40 orang
+            </div>
+            <div class="ruang">
+                Ruang 103 - Kapasitas 50 orang
+            </div>
+        </section>
+
+        <!-- FORM PEMINJAMAN -->
+        <section class="card">
+            <h2>Form Peminjaman Ruang</h2>
+
+            <form id="formPinjam">
+
+                <label>Nama Peminjam</label>
+                <input type="text" id="nama" required>
+
+                <label>Pilih Ruangan</label>
+                <select id="ruang" required>
+                    <option value="">Pilih Ruangan</option>
+                    <option>Ruang 101</option>
+                    <option>Ruang 102</option>
+                    <option>Ruang 103</option>
+                </select>
+
+                <label>Tanggal Peminjaman</label>
+                <input type="date" id="tanggal" required>
+
+                <label>Jam Mulai</label>
+                <input type="time" id="mulai" required>
+
+                <label>Jam Selesai</label>
+                <input type="time" id="selesai" required>
+
+                <label>Keperluan</label>
+                <input type="text" id="keperluan"
+                       placeholder="Contoh: Rapat organisasi"
+                       required>
+
+                <button type="submit">
+                    Ajukan Peminjaman
+                </button>
+            </form>
+
+            <div id="notifikasi" class="hidden"></div>
+        </section>
+
+        <!-- STATUS -->
+        <section class="card">
+            <h2>Status Pengajuan</h2>
+
+            <div style="overflow-x:auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ruangan</th>
+                            <th>Tanggal</th>
+                            <th>Jam</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="hasil"></tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<script>
+
+    let dataPeminjaman = JSON.parse(
+        localStorage.getItem("dataRuang") || "[]"
+    );
+
+    // LOGIN
+    function login() {
+        let nama = document.getElementById("namaLogin").value.trim();
+        let password = document.getElementById("password").value;
+
+        if (nama === "" || password === "") {
+            document.getElementById("pesanLogin").innerText =
+                "Nama dan password wajib diisi!";
+            return;
+        }
+
+        document.getElementById("halamanLogin")
+            .classList.add("hidden");
+
+        document.getElementById("menuUtama")
+            .classList.remove("hidden");
+
+        document.getElementById("namaUser").innerText = nama;
+        document.getElementById("nama").value = nama;
+
+        tampilkanData();
+    }
+
+    // LOGOUT
+    function logout() {
+        document.getElementById("menuUtama")
+            .classList.add("hidden");
+
+        document.getElementById("halamanLogin")
+            .classList.remove("hidden");
+
+        document.getElementById("password").value = "";
+    }
+
+    // NOTIFIKASI
+    function tampilkanNotifikasi(teks, berhasil) {
+        let notif = document.getElementById("notifikasi");
+
+        notif.innerText = teks;
+        notif.classList.remove("hidden");
+
+        if (berhasil) {
+            notif.style.background = "#d1fae5";
+            notif.style.color = "#065f46";
+        } else {
+            notif.style.background = "#fee2e2";
+            notif.style.color = "#991b1b";
+        }
+    }
+
+    // FORM PEMINJAMAN
+    document.getElementById("formPinjam")
+        .addEventListener("submit", function(event) {
+
+        event.preventDefault();
+
+        let nama = document.getElementById("nama").value;
+        let ruang = document.getElementById("ruang").value;
+        let tanggal = document.getElementById("tanggal").value;
+         let mulai = document.getElementById("mulai").value;
+        let selesai = document.getElementById("selesai").value;
+        let keperluan = document.getElementById("keperluan").value;
+
+        let hariIni = new Date();
+        hariIni.setHours(0, 0, 0, 0);
+
+        let tanggalDipilih = new Date(tanggal + "T00:00:00");
+
+        if (tanggalDipilih < hariIni) {
+            tampilkanNotifikasi(
+                "Tanggal tidak boleh di masa lalu!", false
+            );
+            return;
+        }
+
+        if (mulai >= selesai) {
+            tampilkanNotifikasi(
+                "Jam selesai harus setelah jam mulai!", false
+            );
+            return;
+        }
+
+        // VALIDASI JADWAL
+        let bentrok = dataPeminjaman.some(function(data) {
+            return data.ruang === ruang &&
+                   data.tanggal === tanggal &&
+                   mulai < data.selesai &&
+                   selesai > data.mulai;
+        });
+
+        if (bentrok) {
+            tampilkanNotifikasi(
+                "Gagal! Ruangan sudah dipinjam pada jam tersebut.",
+                false
+            );
+            return;
+        }
+
+        let dataBaru = {
+            nama: nama,
+            ruang: ruang,
+            tanggal: tanggal,
+            mulai: mulai,
+            selesai: selesai,
+            keperluan: keperluan,
+            status: "Menunggu"
+        };
+
+        dataPeminjaman.push(dataBaru);
+
+        localStorage.setItem(
+            "dataRuang",
+            JSON.stringify(dataPeminjaman)
+        );
+
+        tampilkanNotifikasi(
+            "Berhasil! Pengajuan peminjaman telah dikirim.",
+            true
+        );
+
+        this.reset();
+
+        document.getElementById("nama").value =
+            document.getElementById("namaUser").innerText;
+
+        tampilkanData();
+    });
+
+    // MENAMPILKAN STATUS
+    function tampilkanData() {
+        let hasil = document.getElementById("hasil");
+        hasil.innerHTML = "";
+
+        dataPeminjaman.forEach(function(data) {
+            let baris = document.createElement("tr");
+
+            [
+                data.ruang,
+                data.tanggal,
+                data.mulai + " - " + data.selesai,
+                data.status
+            ].forEach(function(nilai) {
+                let kolom = document.createElement("td");
+                kolom.textContent = nilai;
+                baris.appendChild(kolom);
+            });
+
+            hasil.appendChild(baris);
+        });
+
+        if (dataPeminjaman.length === 0) {
+            hasil.innerHTML =
+                '<tr><td colspan="4">Belum ada pengajuan.</td></tr>';
+        }
+    }
+
+</script>
+
+</body>
+</html>
